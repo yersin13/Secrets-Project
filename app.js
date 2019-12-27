@@ -129,11 +129,12 @@ app.get("/", function (req, res) {
 
 });
 
+app.get("/auth/google",
     passport.authenticate("google", {
         scope: ["profile"]
     }));
 
-app.get('/auth/google/secrets'),
+app.get('/auth/google/secrets',
     passport.authenticate('google', {
         failureRedirect: '/login'
     }),
@@ -285,3 +286,4 @@ app.post("/login", function (req, res) {
 //    port = 3000;
 //}
 app.listen(process.env.PORT || 5000);
+});
