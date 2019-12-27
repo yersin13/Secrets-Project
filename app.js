@@ -133,7 +133,7 @@ app.get("/", function (req, res) {
         scope: ["profile"]
     }));
 
-app.get('/auth/google/secrets',
+app.get('/auth/google/secrets'),
     passport.authenticate('google', {
         failureRedirect: '/login'
     }),
