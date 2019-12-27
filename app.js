@@ -129,12 +129,11 @@ app.get("/", function (req, res) {
 
 });
 
-app.get("/auth/google",
     passport.authenticate("google", {
         scope: ["profile"]
     }));
 
-app.get('/auth/google/secrets',
+app.get('https://powerful-dawn-87242.herokuapp.com/auth/google/secrets',
     passport.authenticate('google', {
         failureRedirect: '/login'
     }),
