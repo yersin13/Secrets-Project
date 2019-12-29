@@ -266,10 +266,10 @@ app.post("/register", [
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         console.log(errors)
-      res.status(422).json({
+     return res.status(422).json({
             errors: errors.array()
         });
-    }
+    }else{
 
     User.register({
         username: req.body.username
@@ -284,6 +284,7 @@ app.post("/register", [
 
         }
     });
+        }
 
 });
 
