@@ -15,7 +15,11 @@ const findOrCreate = require('mongoose-findorcreate');
 
 const app = express();
 /// const for express validator///
-const { check, validationResult,body } = require('express-validator');
+const {
+    check,
+    validationResult,
+    body
+} = require('express-validator');
 
 
 app.set('view engine', 'ejs');
@@ -93,7 +97,7 @@ passport.deserializeUser(function (id, done) {
 
 
 passport.use(new GoogleStrategy({
-        clientID:"904217430952-ek8764qmuo4olarch7q3tbham2h4unbd.apps.googleusercontent.com",
+        clientID: "904217430952-ek8764qmuo4olarch7q3tbham2h4unbd.apps.googleusercontent.com",
         clientSecret: "FT5R7lAfRW9ac_ZoPJODGY0H",
         callbackURL: "/auth/google/secrets",
         userProfileURL: "https://www.googleapis.com/oauth2/v3/userinfo"
@@ -173,9 +177,9 @@ app.get("/register", function (req, res) {
 });
 
 app.get("/secrets", function (req, res) {
-     
-    
-    
+
+
+
     User.find({
         "secret": {
             $ne: null
@@ -185,13 +189,13 @@ app.get("/secrets", function (req, res) {
             console.log(err);
         } else {
             if (foundUsers) {
-                   
+
                 Secret.find({}, function (err, secret) {
                     console.log(foundUsers._id);
                     res.render("secrets", {
-                        usersWithSecrets: secret 
+                        usersWithSecrets: secret
                     });
-                   
+
                 });
 
 
@@ -248,19 +252,24 @@ app.get('/logout', function (req, res) {
 
 
 
-app.post("/register",[
+app.post("/register", [
     // username must be an email
-  check('username').isEmail(),
-   
+  check('username').isEmail().normalizeEmail(),
+
   // password must be at least 5 chars long
-    
-   check('password', 'Your password must be at least 5 characters').not().isEmpty().isLength({min: 5})
+
+   check('password', 'Your password must be at least 5 characters').not().isEmpty().isLength({
+        min: 5
+    })
 ], function (req, res) {
     // Finds the validation errors in this request and wraps them in an object with handy functions
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(422).json({ errors: errors.array(msg) });
-  }
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        console.log(errors)
+      res.status(422).json({
+            errors: errors.array()
+        });
+    }
 
     User.register({
         username: req.body.username
@@ -303,9 +312,12 @@ app.post("/login", function (req, res) {
 
 
 });
-// use this when it's local---->
+
+
+
+/// use this when it's local---->
 //let port = process.env.PORT;
-//if (port == null || port == ""){
+//if (port == null || port == "") {
 //    port = 3000;
 //}
 //
@@ -317,3 +329,4 @@ app.post("/login", function (req, res) {
 ////Use this when it's online ---->
 
 app.listen(process.env.PORT || 5000);
+ 
