@@ -14,7 +14,8 @@ const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const findOrCreate = require('mongoose-findorcreate');
 
 const app = express();
-
+/// const for express validator///
+const { check, validationResult,body } = require('express-validator');
 
 
 app.set('view engine', 'ejs');
@@ -37,8 +38,11 @@ app.use(session({
 
 app.use(passport.initialize());
 app.use(passport.session());
+////Use this when mongoDB ist online --->
+//mongodb+srv://admin-yersin:eduardo13@cluster0-lzrek.mongodb.net/userDB
 
-
+///Use this when mongoDB it's local ---> 
+//mongodb://localhost:27017/userDB
 mongoose.connect("mongodb+srv://admin-yersin:eduardo13@cluster0-lzrek.mongodb.net/userDB", {
     useNewUrlParser: true,
     useUnifiedTopology: true
@@ -242,7 +246,21 @@ app.get('/logout', function (req, res) {
 });
 
 
-app.post("/register", function (req, res) {
+
+
+app.post("/register",[
+    // username must be an email
+  check('username').isEmail(),
+   
+  // password must be at least 5 chars long
+    
+   check('password', 'Your password must be at least 5 characters').not().isEmpty().isLength({min: 5})
+], function (req, res) {
+    // Finds the validation errors in this request and wraps them in an object with handy functions
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ errors: errors.array(msg) });
+  }
 
     User.register({
         username: req.body.username
@@ -259,6 +277,11 @@ app.post("/register", function (req, res) {
     });
 
 });
+
+
+
+
+
 
 app.post("/login", function (req, res) {
 
@@ -280,9 +303,17 @@ app.post("/login", function (req, res) {
 
 
 });
-
+// use this when it's local---->
 //let port = process.env.PORT;
 //if (port == null || port == ""){
 //    port = 3000;
 //}
+//
+//app.listen(port, function () {
+//    console.log("Server started on port 3000!");
+//});
+
+
+////Use this when it's online ---->
+
 app.listen(process.env.PORT || 5000);
