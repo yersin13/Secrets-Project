@@ -5,15 +5,29 @@
     <i class="fas fa-key fa-6x"></i>
     <h1 class="display-3">Secrets</h1>
     <p class="secret-text">Don't keep your secrets, share them anonymously!</p>
-
-    <form action="/submit" method="POST">
+<!--If u use the format enctype i can use mongo db to storare the string secret thats why it is comente-->
+    <form action="/submit" enctype="multipart/form-data" method="POST">
 
       <div class="form-group">
-        <input type="text" class="form-control text-center" name="secret" placeholder="What's your secret?">
+       
+<!--        <input type="text" class="form-control text-center" name="secret" placeholder="What's your secret?"><br/>-->
+        
+        <%= typeof msg != "undefined" ? msg : "" %>
+      <input type="file" name="newImage"  />
+      <input class="file-path validate"  type="text">
+      <br/>
       </div>
-      <button type="submit" class="btn btn-dark">Submit</button>
+      <button type="submit"  value="Upload" class="btn btn-dark">Submit</button>
     </form>
-
+    
+        
+<!--
+<form action="/upload" enctype="multipart/form-data" method="post">
+      <input type="text" name="tag" /><br/>
+      <input type="file" name="upload" multiple="multiple" /><br/>
+      <input type="submit" value="Upload" />
+    </form>
+-->
 
   </div>
 </div>

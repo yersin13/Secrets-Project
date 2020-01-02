@@ -12,8 +12,19 @@ const passportLocalMongoose = require("passport-local-mongoose");
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 //const FacebookStrategy = require('passport-facebook').Strategy;
 const findOrCreate = require('mongoose-findorcreate');
+/// Set dependans of cloudinary
+const cloudinary = require("cloudinary").v2;
+
+const fileUpload = require("express-fileupload");
+///
+const multer = require("multer");
+const path = require("path");
 
 const app = express();
+
+
+
+
 /// const for express validator///
 const {
     check,
@@ -28,6 +39,11 @@ app.use(bodyParser.urlencoded({
     extended: true
 }));
 app.use(express.static("public"));
+
+/// set fileUpload
+app.use(fileUpload({
+    useTempFiles: true
+}));
 
 
 /// set app.use for session
@@ -47,12 +63,67 @@ app.use(passport.session());
 
 ///Use this when mongoDB it's local ---> 
 //mongodb://localhost:27017/userDB
-mongoose.connect("mongodb+srv://admin-yersin:eduardo13@cluster0-lzrek.mongodb.net/userDB", {
+mongoose.connect("mongodb://localhost:27017/userDB", {
     useNewUrlParser: true,
     useUnifiedTopology: true
 });
 
 mongoose.set("useCreateIndex", true);
+
+///setting configuration of cloudinary
+cloudinary.config({
+    cloud_name: "dwhg9hruy",
+    api_key: "198571481555851",
+    api_secret: "FTWUnnsjobjcRnlSRsnjNxbVbWg"
+});
+
+
+
+///set Storage engine
+const storage = multer.diskStorage({
+    destination: "./public/uploads/",
+    filename: function (req, file, cb) {
+        cb(null, file.fieldname + "-" + Date.now() +
+            path.extname(file.originalname));
+    }
+
+});
+
+function checkFiletype(file, cb) {
+    ///Allow extensions
+    const fileTypes = /jpeg|jpg|png|gif/;
+    /// Check ext
+    const extname = fileTypes.test(path.extname(file.originalname).toLowerCase());
+    //check mime
+    const mimetype = fileTypes.test(file.mimetype);
+    if (mimetype && extname) {
+        return cb(null, true);
+
+    } else {
+        cb("Error: Images Only!");
+
+    }
+}
+
+
+/// Initial upload
+
+
+
+const upload = multer({
+    storage: storage,
+    limits: {
+        fileSize: 10000000
+    },
+    fileFilter: function (req, file, cb) {
+        checkFiletype(file, cb);
+
+
+
+    }
+
+}).single("newImage");
+
 
 ///////
 
@@ -214,34 +285,91 @@ app.get("/submit", function (req, res) {
     }
 });
 
-app.post("/submit", function (req, res) {
-    const submittedSecret = req.body.secret;
 
-    const userId = req.user.id;
+// This code post was for the secrets Strings but its commented to test upload images to the server.
 
-    User.findById(req.user.id, function (err, foundUser) {
-        if (err) {
-            console.log(err);
-        } else {
-            if (foundUser) {
-                const secret = new Secret({
-                    name: submittedSecret
-                });
-                secret.save(function () {
-                    User.findOne({
-                        _id: userId
-                    }, function (err, foundUser) {
-                        foundUser.secrets.push(secret);
-                        foundUser.save();
-                        res.redirect("/secrets");
-                    });
+//app.post("/submit", function (req, res) {
+//    const submittedSecret = req.body.secret;
+//
+//    const userId = req.user.id;
+//
+//    User.findById(req.user.id, function (err, foundUser) {
+//        if (err) {
+//            console.log(err);
+//        } else {
+//            if (foundUser) {
+//                
+//                const secret = new Secret({
+//                    name: submittedSecret
+//                });
+//                secret.save(function () {
+//                    User.findOne({
+//                        _id: userId
+//                    }, function (err, foundUser) {
+//                        foundUser.secrets.push(secret);
+//                        foundUser.save();
+//                        res.redirect("/secrets");
+//                    });
+//
+//                })
+//            }
+//        }
+//    });
+//});
 
-                })
-            }
-        }
+
+
+//this code is for upload image with multer to the server in the public/uploads directory 
+//app.post("/submit", (req, res) =>{
+//    
+//    upload(req, res, (err)=> {
+//        const imagePath = req.file.path;
+//                    if(err){
+//                        res.render("submit", {
+//                            msg:err
+//                        });
+//                    }else {
+//                        if(req.file == undefined){
+//                            res.render( {
+//                               msg:"Error: No file Selected" 
+//                            }, "submit");
+//                        } else{
+//                            console.log(imagePath);
+//                              res.render("submit",{
+//                                         msg:"File upload",
+//                                  file:imagePath
+//                                         }); 
+//                        }             
+//                    }
+//                });
+//});
+
+
+app.post("/submit", function (req, res, next) {
+ 
+ const file = req.files.newImage;
+
+    cloudinary.uploader.upload(file.tempFilePath, function (err, result ){
+     
+        
+    res.render("secrets");
+    
+
     });
-});
 
+
+
+
+    //    to save images in the server with express-fileupload
+    //    file.mv("./public/uploads/" + file.name, function(err, result){
+    //       if(err){
+    //           throw err;
+    //       } else{
+    //           console.log("sucessfully uploaded image");
+    //       }
+    //    });
+    //    
+});
 
 
 app.get('/logout', function (req, res) {
@@ -266,25 +394,25 @@ app.post("/register", [
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         console.log(errors)
-     return res.status(422).json({
+        return res.status(422).json({
             errors: errors.array()
         });
-    }else{
+    } else {
 
-    User.register({
-        username: req.body.username
-    }, req.body.password, function (err, user) {
-        if (err) {
-            console.log(err);
-            res.redirect("/register");
-        } else {
-            passport.authenticate("local")(req, res, function () {
-                res.redirect("/secrets");
-            });
+        User.register({
+            username: req.body.username
+        }, req.body.password, function (err, user) {
+            if (err) {
+                console.log(err);
+                res.redirect("/register");
+            } else {
+                passport.authenticate("local")(req, res, function () {
+                    res.redirect("/secrets");
+                });
 
-        }
-    });
-        }
+            }
+        });
+    }
 
 });
 
@@ -317,17 +445,17 @@ app.post("/login", function (req, res) {
 
 
 /// use this when it's local---->
-//let port = process.env.PORT;
-//if (port == null || port == "") {
-//    port = 3000;
-//}
-//
-//app.listen(port, function () {
-//    console.log("Server started on port 3000!");
-//});
+let port = process.env.PORT;
+if (port == null || port == "") {
+    port = 3000;
+}
+
+app.listen(port, function () {
+    console.log("Server started on port 3000!");
+});
 
 
 ////Use this when it's online ---->
 
-app.listen(process.env.PORT || 5000);
- 
+//app.listen(process.env.PORT || 5000);
+// 
